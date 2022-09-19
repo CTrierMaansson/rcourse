@@ -1,0 +1,491 @@
+---
+title: |-
+  How to make an R package
+   \vspace{0.5in}
+author:
+- name: Christoffer Trier Maansson
+  affiliation: 
+    Department of Clinical Biochemistry, Aarhus University Hospital, Denmark
+  email: ctm@clin.au.dk
+date: "`r format(Sys.time(), '%d %b %Y')`"
+output:
+  BiocStyle::html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    highlight: haddock
+abstract: "This document will demonstrate how to make an
+R package. First it will highlight the contents of an R
+Package and then move on to explain how a package is 
+created, edited, updated and eventually submitted to
+for example Bioconductor. The contents of an R package
+is located at a GitHub repository and therefore a short
+introduction to GitHub is also included. I have created an R package called
+**DNAfusion** which can be located at my GitHub repository
+https://github.com/CTrierMaansson/DNAfusion. This can serve as an example of
+an R package. " 
+vignette: |
+  %\VignetteIndexEntry{How to make an R package}
+  %\VignetteEncoding{UTF-8} 
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    tidy.opts = list(width.cutoff=100),
+    tidy = FALSE,
+    message = FALSE,
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+# Introduction to **GitHub**
+An R package is first and foremost a collection of R functions created with a 
+specific purpose, however the package also needs documentation, tests,
+descriptions, and more. All of the files for the R package is kept in a folder,
+which is linked to a GitHub repository. This means that all of the code in the 
+package is freely available to the public. 
+
+## What is a **GitHub repository**
+A **GitHub repository** is an online folder which is linked to
+a folder on your local computer. When you make changes to that folder they are 
+registered and can be `pushed` to the online repository, updating the content
+of the online folder. In order to update the repository the changes first need
+to be `commited`, followed by defining a short name for the update and then 
+`pushed` to the repository. I strongly recommend using the freely available 
+tool GitHub Desktop, which can be used to perform these tasks instead of 
+writing the commands in the prompt. 
+
+## **GitHub branches**
+Because **GitHub repositories** are accessible to everyone it is frequently 
+used in collaborations. This gives the opportunity for people to work on a
+project within the same folder without the fear of issues with synchronization.
+This is achieved through `branches`. GitHub have a memory of previous versions
+of the repository and each time a change is pushed to the repository it is 
+pushed to a specific `branch` of the repository. As default, the first 
+branch is called `main` (previously called `master`, however
+because of black lives matter, this was changed to `main`... True story)
+and can be viewed as the stem of a tree. Lets say an individual wants to 
+investigate some changes to the repository however they don't want to change
+the main repository.Then they simply create a new branch 
+(let's call it `alternative`) and push the changes to that branch. Now the 
+`main` and `alternative` branches can exist in parallel and be modified 
+separately. If `alternative` eventually prove superior `alternative` can be
+merged into `main` and now only the `main` branch exist. 
+
+It is important to remember that if more than one person is working on a
+project you need to `fetch` the most recent version of the repository before
+any changes are made locally and then pushed to the repository. 
+This habit of fetching, commiting and pushing quickly because standard.
+
+**For more information regarding GitHub i recommend this tutorial:**
+
+https://www.youtube.com/watch?v=8Dd7KRpKeaE&ab_channel=CoderCoder
+
+
+# **Contents** of an R Package
+The repository must contain 4 folders (man, R, tests, and vignettes) and 3 
+documents (DESCRIPTION, NAMESPACE, and README). In addition it can also
+contain the folder inst, as well as LICENSE and NEWS documents. 
+**All folders and files must be given these exact names!**
+
+## The **R** folder
+This folder contains the functions of the package. The functions can either be
+in the same R document (.R) or in separate documents.
+All functions in R must have help documents which can be read in R using 
+either of the two commands:
+
+```{r helper, message=FALSE, results = 'hide', eval = FALSE}
+?my_function()
+
+#or
+
+help(my_function)
+
+```
+
+`my_function()` is the name of the function to be included in the package.
+
+`roxygen2` is used to create this documentation and includes so called tags
+which are defined using `@`. `roxygen2` will not be explained in this tutorial
+however more information can be found at https://r-pkgs.org/man.html. 
+
+## The **man** folder
+The man folder contains the documentation of each function of the package in 
+separate .Rd files. **Importantly, these files are not made manually**. They 
+are created using either:
+
+```{r document, message=FALSE, results = 'hide', eval = FALSE}
+if (!require(devtools)) install.packages("devtools")
+library(devtools)
+devtools::document()
+
+#or
+if (!require(roxygen2)) install.packages("roxygen2")
+library(roxygen2)
+roxygen2::roxygenize()
+
+```
+
+As demonstrated above, the package is created by running other functions. I
+**STRONGLY** recommend creating an .R document 
+(for example creating_MyPackage.R) **NOT** located in the package folder where 
+you can run code which will build, check, install the package among 
+other things. But more on that later. 
+
+The .Rd files are automatically put into the man folder. 
+
+## The **tests** folder
+This folder is only mandatory if the package needs to be submitted to CRAN or
+Bioconductor. The folder includes an .R document called testhat.R which just 
+contains 4 lines of code:
+
+```{r testthat, message=FALSE, results = 'hide', eval = FALSE}
+if (!require(testthat)) install.packages("testthat")
+library(MyPackage)
+library(testthat)
+test_check("MyPackage")
+
+```
+
+Additionally, tests, contains the folder, testthat, which includes a single .R 
+document called test_functions.R
+
+This document uses functions from the `testthat` package to test the code in
+the R folder. More specifically, it runs the code and test if the output are
+of the expected class. An R package needs a test document which covers the 
+code in the R file, meaning most of the code is run during the test. 
+The coverage of the tests are investigated using. 
+
+```{r coverage, message=FALSE, results = 'hide', eval = FALSE}
+if (!require(covr)) install.packages("covr")
+library(covr)
+covr::report()
+
+```
+
+It is expected that the coverage should be above 90%. 
+
+For more information regarding tests see:
+
+https://www.r-bloggers.com/2019/11/automated-testing-with-testthat-in-practice/
+
+
+## The **vignettes** folder
+This folder contains a single R markdown document (.rmd) which works as a 
+guide for how to use the package. A vignette is typically a .html or .pdf file 
+which will walk you through all functions with examples and explains how to 
+implement each function. Vignettes can vary a lot in detail however a good 
+vignette makes it easier for outsiders to understand the package
+and is therefore always appreciated. CRAN and bioconductor have specific
+requirements to the contents of the vignette. 
+
+How to create the vignette will not be discussed here, however I recommend 
+referring to 
+
+https://github.com/CTrierMaansson/DNAfusion/tree/main/vignettes
+to see an example. 
+
+Or:
+
+https://www.youtube.com/watch?v=3N0klPMNyLY&ab_channel=StatistikinDD
+
+https://r-pkgs.org/vignettes.html
+
+## The **DESCRIPTION** file
+This is perhaps the most important document because it contains all of the 
+information of the package. For example it includes, the package name (short
+and a single word), package title (long and contains more words), version, 
+Author information, short description, packages used in the package build,
+packages used in the R code, GitHub information and more.
+
+The contents of DESCRIPTION have to be made in a specific way and is expected
+to meet certain format requirements. 
+
+For more information see:
+
+https://r-pkgs.org/Metadata.html
+
+But don't worry if something is written incorrectly,
+the package checks (discussed later) will tell you. 
+
+## The **NAMESPACE** file
+This is automatically generated alongside the .Rd files in **man**. 
+You **don't** generally touch the things in NAMESPACE, **However**, you will
+need to define how assisting packages used in your functions are imported into
+your package. This is used with `import()` and `importFrom()` which also needs
+to match how the packages are imported in the .R document in the **R** folder
+as well as in the **DESCRIPTION** file.
+This can be a bit tricky and look here for a more elaborate explanation:
+
+https://kbroman.org/pkg_primer/pages/depends.html
+
+https://bookdown.dongzhuoer.com/hadley/r-pkgs/namespace.html
+
+
+## The **README** file
+This file gives a brief overview of the package. Typically the description 
+section from the DESCRIPTION is included, as well as how to install the 
+package. In the end, a section can be included explaining how to cite the
+package. 
+
+For a nicer look than a typical .txt document, the README file be made in 
+markdown (.md). The README file is automatically displayed on the front page
+of the GitHub repository, and therefore making it visually pretty is essential.
+
+## **Optional** files and folders
+
+### The **inst** folder
+This folder is necessary if data is included in the package to be used as 
+examples for functions. 
+Inside the inst folder the **extdata** folder can contain data to be included
+in the package. This data can be accessed using
+
+```{r data_access, message=FALSE, results = 'hide', eval = FALSE}
+PackageData <- system.file("extdata", "Name_of_file", package = "MyPackage")
+
+
+```
+
+Then `PackageData` can be used as an object for input into the package functions
+This is relevant both in the vignette file, as well as to be used as examples
+in the .R document with functions, implemented with `roxygen2`. 
+
+If your package contain **extdata** then you must include a **script** folder in
+the **inst** folder. Script includes a markdown (.md) document describing the 
+data in the extdata folder. 
+
+Additionally, the **inst** folder can contain a **doc** folder which includes
+documentation of the package such as package manual, created with:
+
+```{r manual, message=FALSE, results = 'hide', eval = FALSE}
+devtools::build_manual("MyPackage")
+
+
+```
+
+However, Bioconductor will not allow a **doc** folder in **inst**. 
+
+### The **LICENSE** file
+This file describes the user license. Templates exist such as:
+
+https://rdrr.io/github/r-pkgs/usethis/f/inst/templates/license-GPL-3.md
+
+Describing how to generate a LICENSE file. 
+
+# **Creating** the package
+Now that you understand what a package contains we will move on to actually 
+creating a package. As can be seen above `devtools` is a tool to manipulate
+R packages. `devtools` is a very powerful R package made to create and check R 
+packages. The following code should be run in your separate 
+**creating_MyPackage.R** document.
+
+Installing devtools:
+
+```{r devtools, message=FALSE, results = 'hide', eval = FALSE}
+
+if (!require(devtools)) install.packages('devtools')
+library(devtools)
+
+```
+
+
+
+Following installing `devtools`, the first you do is run:
+
+```{r creating_folder, message=FALSE, results = 'hide', eval = FALSE}
+devtools::create("MyPackage")
+
+
+```
+
+This will create a folder named **MyPackage** containing, .gitignore, 
+.Rbuildignore, DESCRIPTION, MyPackage.Rproj, NAMESPACE files and the R folder. 
+
+The next step is to link this folder to GitHub as explained above. 
+
+Then you create the above mentioned folders and files and then you actually have 
+the R package. 
+
+Remember when you have created your MyPackage_functions.R document in **R**, 
+then create a **man** folder and run 
+
+```{r creating_documentation, message=FALSE, results = 'hide', eval = FALSE}
+devtools::document()
+
+
+```
+
+To update the **man** folder and the **NAMESPACE** file. 
+
+## **Installing** package from GitHub
+
+At this point you could try and install your package from GitHub using:
+
+```{r intalling_from_GitHub, message=FALSE, results = 'hide', eval = FALSE}
+devtools::install_github("usr/MyPackage")
+
+
+```
+
+Where **usr** is your GitHub username. 
+
+If you have created the necessary files and directories, then your package will 
+be installed and you can load the package with:
+
+```{r lib, message=FALSE, results = 'hide', eval = FALSE}
+library(MyPackage)
+
+
+```
+
+Furthermore it is possible to view the `help` pages with:
+
+```{r help, message=FALSE, results = 'hide', eval = FALSE}
+?MyPackage::foo()
+
+
+```
+
+Where `foo()` is an example of a function name contained in the package. 
+
+## **Building** the package
+
+When making R packages we also talk about **builds**. An R package build file is 
+a file from which the package can be installed locally. This file is created 
+with:
+
+```{r building_the_package, message=FALSE, results = 'hide', eval = FALSE}
+devtools::build("MyPackage")
+
+
+```
+
+## **Checking** the package
+
+A big part of making an R package for publication at bioconductor
+is passing 3 `check` functions. These functions will go through all of the files
+in your R package folder and check that the files are folders are made 
+correctly. In order to acquire these functions run:
+
+```{r access_check1, message=FALSE, results = 'hide', eval = FALSE}
+if (!require(devtools)) install.packages('devtools')
+library(devtools)
+
+if (!require(BiocManager)) install.packages('BiocManager')
+library(BiocManager)
+
+
+```
+
+`BiocManager` is the Bioconductor manager package, which is used to install 
+packages through Bioconductor, including BiocCheck:
+
+```{r access_check2, message=FALSE, results = 'hide', eval = FALSE}
+
+if (!require(BiocCheck)) BiocManager::install("BiocCheck")
+library(BiocCheck)
+
+```
+
+`devtools` contain a check function which is always used whereas `BiocCheck`
+contain two functions which are Bioconductor specific. 
+
+When something is incorrect in the package the check functions will designate
+a **NOTE**, **WARNING**, or an **ERROR** with ascending severity. This means
+that `NOTES` primarily are suggestions, however it is recommended to follow the
+instructions. `WARNINGS` and `ERRORS` needs to be addressed and fixed. 
+`WARNINGS` means that something is not as it is supposed to be, whereas 
+`ERRORS` indicate that something is simply not working. 
+
+First run:
+
+```{r devtools_check, message=FALSE, results = 'hide', eval = FALSE}
+devtools::check("MyPackage")
+
+
+```
+
+This needs to be run where the working directory `wd()` is "above" or in the 
+root of your package directory. 
+
+Then run:
+
+```{r check_GitClone, message=FALSE, results = 'hide', eval = FALSE}
+BiocCheck::BiocCheckGitClone("MyPackage")
+
+
+```
+
+Which similarly needs to be at the root of your package directory
+
+And finally run
+
+```{r check_BiocCheck, message=FALSE, results = 'hide', eval = FALSE}
+BiocCheck::BiocCheck('MyPackage'=TRUE)
+
+
+```
+
+This needs to be run where the working directory is your package folder
+
+It will take time to address all of the issues with these check functions, 
+however it will make your package more streamlined. 
+
+## Package documentation
+
+We have touched upon package documentation throughout this guide. It is also
+really important and it ensures reproducibility
+
+When your vignette is done `knit` it and export it as .pdf and .html. 
+These files can be kept in your root folder of your package. 
+
+I also recommend using devtools to produce a manual of your functions. 
+This manual encompasses all of the help files you have created in the .R folder
+Do this by running
+
+```{r build_manual, message=FALSE, results = 'hide', eval = FALSE}
+devtools::build_manual("MyPackage")
+
+
+```
+
+# **Submitting** to Bioconductor
+When your package is done and you have passed all 3 check functions the package
+is ready to be submitted to Bioconductor. This is done by following this link:
+
+https://github.com/Bioconductor/Contributions/issues
+
+And clicking on "new issue". The only input you have when submitting the package
+is your link to the GitHub repository of the package. Therefore, make sure
+that you have **updated** the GitHub repository before submitting the package. 
+
+During the review process you'll need to make changes to the package which also
+will need to be registered at Bioconductor. Here you'll need to have **git**
+installed on your local machine because you'll need to write commands in the 
+prompt. How to create this link and to push changes are described in detail
+here:
+
+https://contributions.bioconductor.org/git-version-control.html#new-package-workflow
+
+
+# **Conclusion**
+
+Hopefully this guide has been helpful in your creation of an R package. 
+Just a few final notes:
+
+Remember to push to GitHub frequently so your package is updated online
+
+Address all issues returned by the check functions
+
+Document the creation of your package by building the package in a separate .R
+file
+
+Frequently uninstall and re-install your package to test whether installation, 
+building and activation of the package runs smoothly. 
+
+Create an elaborate vignette. It really helps you understand your code better
+
+Thank you
+
